@@ -7,11 +7,12 @@ import time
 from solve_model import solve_model
 import matplotlib.pyplot as plt
 
-flow = np.load('flow200000.npy')
-volume = np.load('volume200000.npy')
-paw = np.load('paw200000.npy')
-resistances = np.load('rins200000.npy')
-capacitances = np.load('capacitances200000.npy')
+size = 100000
+flow = np.load('./data/flow'+str(size)+'.npy')
+volume = np.load('./data/volume'+str(size)+'.npy')
+paw = np.load('./data/paw'+str(size)+'.npy')
+resistances = np.load('./data/rins'+str(size)+'.npy')
+capacitances = np.load('./data/capacitances'+str(size)+'.npy')
 
 (min_flow, max_flow, _) = normalize_data(flow)
 (min_volume, max_volume, _) = normalize_data(volume)
@@ -38,7 +39,7 @@ rr = RR[0]
 
 print(f'Creating waveforms for fs={fs} / rr={rr}')
 
-num_points = int(np.floor(60.0 / rr * fs) + 1)
+num_points = int(np.floor(180.0 / np.min(RR) * np.max(Fs)) + 1)
 
 # Target waveforms
 flow = np.zeros((num_points, num_test_cases))

@@ -1,7 +1,7 @@
 from utils import np
 from pmus_generation import pmus_profile
 from scipy.integrate import odeint
-
+from parameter_set import Fs,RR
 
 def flow_model(y, t, paw, pmus, model, c, e2, r):
     if model == 'FOLM':
@@ -42,8 +42,8 @@ def solve_model(header_params,params,header_features,features,debugmsg):
     e2 = params[header_params.index('E2')]
     model = features[header_features.index('Model')]
 
-    expected_len = int(np.floor(60.0 / 10.0 * fs) + 1)
-
+    expected_len = int(np.floor(180.0 / np.min(RR) * np.max(Fs)) + 1)
+    
     #Assings pmus profile
     pmus = pmus_profile(fs, rr, pmus_type, pp, tp, tf)
     pmus = pmus + peep #adjusts PEEP
@@ -173,13 +173,6 @@ def solve_model(header_params,params,header_features,features,debugmsg):
     if time_exp > -1:
         insex = np.concatenate((np.ones(time_exp), np.zeros(len(time) - time_exp)))
 
-    #Adds noise over flow and paw waveforms
-    #No noise over volume trace because it is an actual integration of flow trace
-    if np.fabs(noise) > 1e-6:
-        # flow = flow + np.random.randn(len(flow)) * np.sqrt(noise)
-        paw = paw + np.random.randn(len(paw)) * np.sqrt(noise)
-        # pmus = pmus + np.random.randn(len(pmus)) * np.sqrt(noise)
-
     #Drops the first element
     flow = flow[1:] / 1000.0 * 60.0  # converts back to L/min
     volume = volume[1:]
@@ -187,21 +180,45 @@ def solve_model(header_params,params,header_features,features,debugmsg):
     pmus = pmus[1:]
     insex = insex[1:]
 
-    flow = np.concatenate((flow,np.array([0]*(expected_len - len(flow)))))
-    volume = np.concatenate((volume,np.array([0]*(expected_len - len(volume)))))
-    paw = np.concatenate((paw,np.array([paw[0]]*(expected_len - len(paw)))))
-    pmus = np.concatenate((pmus,np.array([pmus[-1]]*(expected_len - len(pmus)))))
-    insex = np.concatenate((insex,np.array([insex[0]]*(expected_len - len(insex)))))
-
-    #Consistency check over generated waveforms
-    # if not (len(flow) == expected_len and len(volume) == expected_len and
-    #         len(paw) == expected_len and len(pmus) == expected_len and len(insex) == expected_len and
-    #         volume[-1] < 10.0 and #suitable expiratory time
-    #         time_peak_flow > -1 and
-    #         time_exp > -1):
-    #     if debugmsg:
-    #         print(f'{len(flow)}-{len(volume)}-{len(paw)}-{len(pmus)}-{len(insex)}')
-    #         print('volume(end)={:.2f}, time_peak_flow={:.2f}, time_exp={:.2}'.format(volume[-1], time_peak_flow, time_exp))
+    flow,volume,paw,pmus,insex = generate_cycle(expected_len,flow,volume,paw,pmus,insex)
+    
+    flow,volume,paw,pmus,insex = generate_noise(noise,flow,volume,paw,pmus,insex)
+    
 
     return flow, volume, paw, pmus, insex, rins,rexp, c
 
+
+def generate_cycle(length,*args):
+    
+    startpos  = np.random.randint(0,len(args[0])) 
+    delta     = (length - startpos)
+    nzeroes   = delta//len(args[0])+1
+    
+    zpos      = np.random.randint(2,delta//3,size=nzeroes)
+    
+    res       = [None]*len(args)
+
+    vrandom   = [np.random.uniform(0.95,1.05) if np.random.random() > 0.05 else np.random.uniform(0.1,0.2) for i in range(nzeroes+1)]
+
+    for i in range(len(args)):
+
+        rarr = args[i][-startpos:]
+        
+        for j in range(nzeroes):
+            aux = 0.0
+            if vrandom[j+1] < 0.9: aux = vrandom[j+1]*args[i] + args[i][-1]*(1-vrandom[j+1])
+            else: aux = vrandom[j+1]*args[i]
+            rarr = np.concatenate((rarr,np.ones(zpos[j])*rarr[-1],aux))
+
+        res[i] = rarr[:length]
+    
+    return res
+
+def generate_noise(noise,*args):
+    
+    res = [None]*len(args)
+    
+    for i in range(len(args)):
+        res[i] = args[i] + np.max(args[i])/10.0*np.random.randn(len(args[i]))*np.sqrt(noise)
+    
+    return res

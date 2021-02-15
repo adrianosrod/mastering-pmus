@@ -6,11 +6,12 @@ from matplotlib import pyplot as plt
 num_epochs = 100
 json_file_name = 'pmus_cnn'
 
-flow = np.load('flow200000.npy')
-volume = np.load('volume200000.npy')
-paw = np.load('paw200000.npy')
-resistances = np.load('rins200000.npy')
-capacitances = np.load('capacitances200000.npy')
+size = 100000
+flow = np.load('./data/flow'+str(size)+'.npy')
+volume = np.load('./data/volume'+str(size)+'.npy')
+paw = np.load('./data/paw'+str(size)+'.npy')
+resistances = np.load('./data/rins'+str(size)+'.npy')
+capacitances = np.load('./data/capacitances'+str(size)+'.npy')
 
 flow = flow.T
 volume = volume.T
@@ -40,7 +41,7 @@ input_train, input_test, output_train, output_test, indices_train, indices_test 
 
 model = CNN_Model(num_samples,input_volume = 3).get_model()
 
-es_callback = EarlyStopping(monitor='val_loss',patience=3,restore_best_weights=True)
+es_callback = EarlyStopping(monitor='val_loss',patience=5,restore_best_weights=True)
 
 history = model.fit(input_train, output_train, epochs=num_epochs, verbose=1,
                     validation_data=(input_test, output_test) , callbacks=[es_callback])

@@ -4,8 +4,8 @@ RESISTENCE_INSP = 'Rins'
 RESISTENCE_EXP  = 'Rexp'
 CAPACITANCE     = 'C'
 
-Fs = [50]           #sample frequency, Hertz (Hz)
-Noise = [0, 1e-4, 1e-6] #noise variance over pressure/flow waveforms
+Fs = [50.0]           #sample frequency, Hertz (Hz)
+Noise = [1e-4, 1e-3, 1e-6] #noise variance over pressure/flow waveforms
 
 Rvent = [0]          #ventilator expiratory valve resistance, cmH2O/(L/s)
 Model = ['FOLM'] #respiratory system model
@@ -21,9 +21,9 @@ Triggerflow = [2]                          #airflow, (L/min)
 Triggerpressure = [-0.5, -1, -2]                 #pressure (cmH2O)
 Triggerdelay = [0.05, 0.10]                     #delay time (s)
 Triggerarg = Triggerflow
-Cycleoff = [0.10, 0.25, 0.40]                     #turns off the support, after flow fall below x% of the peak flow
+Cycleoff = np.arange(0.10, 0.4 ,0.01)                     #turns off the support, after flow fall below x% of the peak flow
 Risetype = ['exp','linear']                    #pressure waveform rises in exponential or linear fashions
-Risetime = [0.15, 0.3]                    #time (s) to pressure waveform rises from PEEP to SP
+Risetime = np.arange(0.15, 0.3,0.01)                    #time (s) to pressure waveform rises from PEEP to SP
 
 RR = np.arange(10.0,35.01,0.1)#[10, 15, 25, 35]   #respiratory rate, respirations per minute (rpm)
 Pmustype = ['ingmar', 'linear', 'parexp']        #morphology of the respiratory effort

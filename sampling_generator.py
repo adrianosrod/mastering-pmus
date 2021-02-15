@@ -19,7 +19,7 @@ def sampling_generator(size, path=''):
     if path:
         save_csv(samples,map_params,path)    
     
-    return samples
+    return map_params, samples
 
 
 def is_valid(arr,map_params):

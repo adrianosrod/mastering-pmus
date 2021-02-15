@@ -59,9 +59,10 @@ def pmus_parexp(fs, rr, pp, tp, tf):
     :param tf: end of effort
     :return: pmus profile
     """
+    
     ntp = np.floor(tp * fs)
     ntN = np.floor(60.0 / rr * fs)
-    taur = (tf - tp) / 4.0
+    taur = abs(tf - tp) / 4.0
 
     pmus1 = pp * (60.0 * rr - np.arange(0, ntp + 1, 1) / fs) * (np.arange(0, ntp + 1, 1) / fs) / (tp * (60.0 * rr - tp))
     pmus2 = pp * (np.exp(-(np.arange(ntp + 1, ntN + 1, 1) / fs - tp) / taur) - np.exp(-(60.0 * rr - tp) / taur)) / (
