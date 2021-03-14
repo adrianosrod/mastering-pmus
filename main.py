@@ -7,7 +7,7 @@ from utils import np, load_csv,get_random_features
 import time
 import matplotlib.pyplot as plt
 
-filename = 'asl_assinc.mat'
+filename = 'asl.mat'
 
 annots = loadmat(filename)
 
@@ -32,6 +32,7 @@ min_volume,max_volume = -4.80200698015777, 1625.6115545292896
 min_paw,max_paw = -1.9274642712031753, 15.75437039299909
 min_resistances,max_resistances = 0.004, 0.030009000000008695
 min_capacitances,max_capacitances = 30.01000000000001, 80.00700000006111
+
 # print(min_flow,max_flow)
 # print(min_volume,max_volume)
 # print(min_paw,max_paw)
@@ -39,10 +40,8 @@ min_capacitances,max_capacitances = 30.01000000000001, 80.00700000006111
 # print(min_capacitances,max_capacitances)
 
 imagepath = './images/full_'
-model_filename = 'pmus_cnn'
-models = []
-for i in range(1):
-    models.append(load_model_from_json(model_filename+f'_{i+1}'))
+model_filename = 'pmus_cnn_ASL_sincrono'
+models = [load_model_from_json(model_filename)]
     
     
 # model = load_model_from_json(model_filename)
@@ -162,7 +161,6 @@ for i in range(num_examples):
 
     
     pmus_hat = paw - np.percentile(np.abs(paw),60) - (R_hat) * flow *1000.0 / 60.0 - (1 /C_hat) * volume
-    # pmus_hat = np.where(pmus_hat <= 0, pmus_hat , 0)
     
     plt.figure()
     
@@ -177,29 +175,6 @@ for i in range(num_examples):
     # err_r.append((R_hat))
     err_pmus.append(sum((pmus[i,:]-pmus_hat)**2)/len(pmus_hat))
 
-print(pmus.shape)
 print(sum(err_pmus)/len(err_pmus))
 
 # plt.show()
-
-# plt.plot(err_pmus[0])
-
-from statistics import stdev, mean
-
-# mean_c = mean(err_c)
-# std_c  = stdev(err_c)
-
-# print("mean error capacitance: ", mean_c)
-# print("std  error capacitance: ", std_c)
-
-# mean_r = mean(err_r)
-# std_r  = stdev(err_r)
-
-# print("mean error resistance: ", mean_r)
-# print("std  error resistance: ", std_r)
-
-# mean_pmus = mean((mean(err) for err in err_pmus))
-# std_pmus  = mean((stdev(err) for err in err_pmus))
-
-# print("mean error pmus: ", mean_pmus)
-# print("std  error pmus: ", std_pmus)
