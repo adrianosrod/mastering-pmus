@@ -1,7 +1,9 @@
 from utils import np
 from pmus_generation import pmus_profile
 from scipy.integrate import odeint
+from scipy import stats
 from parameter_set import Fs,RR
+import matplotlib.pyplot as plt
 
 def flow_model(y, t, paw, pmus, model, c, e2, r):
     if model == 'FOLM':
@@ -77,9 +79,6 @@ def solve_model(header_params,params,header_features,features,debugmsg):
     detect_exp = False
     time_exp = -1
 
-
-    
-
     if trigger_type == 'flow':
         # units conversion from L/min to mL/s
         trigger_arg = trigger_arg / 60.0 * 1000.0
@@ -113,11 +112,13 @@ def solve_model(header_params,params,header_features,features,debugmsg):
             if rise_type == 'step':
                 paw[i] = sp + peep
             elif rise_type == 'exp':
+                rise_type = rise_type if np.random.random() > 0.01 else 'linear'
                 if paw[i] < sp + peep:
-                    paw[i] = (1.0 - np.exp(-(time[i] - time_support) / rise_time * 4.0)) * sp + peep
+                    paw[i] = (1.0 - np.exp(-(time[i] - time_support) / rise_time )) * sp + peep
                 if paw[i] >= sp + peep:
                     paw[i] = sp + peep
             elif rise_type == 'linear':
+                rise_type = rise_type if np.random.random() > 0.01 else 'exp'
                 if paw[i] < sp + peep:
                     paw[i] = (time[i] - time_support) / rise_time * sp + peep
                 if paw[i] >= sp + peep:
@@ -151,10 +152,11 @@ def solve_model(header_params,params,header_features,features,debugmsg):
                 paw[i] = peep
             elif rise_type == 'exp':
                 if paw[i - 1] > peep:
-                    paw[i] = sp * (np.exp(-(time[i] - time[time_exp-1]) / rise_time * 4.0)) + peep
+                    paw[i] = sp * (np.exp(-(time[i] - time[time_exp-1]) / rise_time )) + peep
                 if paw[i - 1] <= peep:
                     paw[i] = peep
             elif rise_type == 'linear':
+                rise_type = rise_type if np.random.random() > 0.01 else 'exp'
                 if paw[i - 1] > peep:
                     paw[i] = sp * (1 - (time[i] - time[time_exp-1]) / rise_time) + peep
                 if paw[i - 1] <= peep:
@@ -177,18 +179,25 @@ def solve_model(header_params,params,header_features,features,debugmsg):
     flow = flow[1:] / 1000.0 * 60.0  # converts back to L/min
     volume = volume[1:]
     paw = paw[1:]
-    pmus = pmus[1:]
+    pmus = pmus[1:] - peep #reajust peep again
     insex = insex[1:]
 
-    flow,volume,paw,pmus,insex = generate_cycle(expected_len,flow,volume,paw,pmus,insex)
+    flow,volume,pmus,insex,paw = generate_cycle(expected_len,flow,volume,pmus,insex,paw,peep=peep)
+
+    # paw = generate_cycle(expected_len,paw,peep=peep)[0]
     
     flow,volume,paw,pmus,insex = generate_noise(noise,flow,volume,paw,pmus,insex)
-    
+
+    # plt.plot(flow)
+    # plt.plot(volume)
+    # plt.plot(paw)
+    # plt.plot(pmus)
+    # plt.show()
 
     return flow, volume, paw, pmus, insex, rins,rexp, c
 
 
-def generate_cycle(length,*args):
+def generate_cycle(length,*args,peep=None):
     
     startpos  = np.random.randint(0,len(args[0])) 
     delta     = (length - startpos)
@@ -198,17 +207,18 @@ def generate_cycle(length,*args):
     
     res       = [None]*len(args)
 
-    vrandom   = [np.random.uniform(0.95,1.05) if np.random.random() > 0.05 else np.random.uniform(0.1,0.2) for i in range(nzeroes+1)]
+    vrandom   = [np.random.uniform(0.95,1.05) if np.random.random() > 0.01 else np.random.uniform(0.1,0.2) for i in range(nzeroes+1)]
 
     for i in range(len(args)):
-
         rarr = args[i][-startpos:]
-        
+        # mode = stats.mode(args[i])[0]
+        mode = peep if (not peep is None) and (i==len(args)-1) else 0
         for j in range(nzeroes):
-            aux = 0.0
-            if vrandom[j+1] < 0.9: aux = vrandom[j+1]*args[i] + args[i][-1]*(1-vrandom[j+1])
-            else: aux = vrandom[j+1]*args[i]
-            rarr = np.concatenate((rarr,np.ones(zpos[j])*rarr[-1],aux))
+            aux = vrandom[j+1]*args[i] + (1-vrandom[j+1])*mode
+            # aux = 0.0
+            # if vrandom[j+1] < 0.9: aux = np.array([ vrandom[j+1]*value if value > mode/vrandom[j+1] else value for value in args[i]])
+            # else: aux = np.array([vrandom[j+1]*value if value > mode/vrandom[j+1] else value for value in args[i]])
+            rarr = np.concatenate((rarr,np.ones(zpos[j])*mode,aux))
 
         res[i] = rarr[:length]
     
@@ -219,6 +229,6 @@ def generate_noise(noise,*args):
     res = [None]*len(args)
     
     for i in range(len(args)):
-        res[i] = args[i] + np.max(args[i])/10.0*np.random.randn(len(args[i]))*np.sqrt(noise)
+        res[i] = args[i] + np.average(args[i])/10*np.random.randn(len(args[i]))*np.sqrt(noise)
     
     return res

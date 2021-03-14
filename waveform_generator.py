@@ -4,9 +4,10 @@ import time
 from solve_model import solve_model
 import os
 from sampling_generator import sampling_generator
+import matplotlib.pyplot as plt
 
 save_file = True
-size = int(100000)
+size = 9e3
 filename = 'test_'+str(size)+'.csv'
 
 if not os.path.exists(filename):
@@ -42,7 +43,7 @@ capacitances = np.zeros((1, num_test_cases))
 t = time.time()
 
 for i in range(num_test_cases):
-    if i % 1000 == 0:
+    if i % 500 == 0:
         print('%d/%d' % (i, num_test_cases))
     (flow[:, i], volume[:, i], paw[:, i], pmus[:, i], ins[:, i], rins,rexp, c) = solve_model(header_params,param[i], header_features,feature[i],'')
     resistances_ins[0, i] = rins
@@ -51,14 +52,6 @@ for i in range(num_test_cases):
 
 print(f'Elapsed time for solving test cases: {time.time() - t}')
 
-# import matplotlib.pyplot as plt
-
-# plt.plot(flow)
-# plt.show()
-# plt.plot(volume)
-# plt.show()
-# plt.plot(paw)
-# plt.show()
 
 # Save the waveforms in a file
 if save_file:

@@ -14,12 +14,14 @@ E2 = [-30, -20, -10, 0, 10, 20, 30]
 Rins = np.arange(4.0, 30.01, 0.001)#[7]     #respiratory system inspiratory resistance, cmH2O/(L/s)
 Rexp = Rins   #respiratory system  expiratory resistance, cmH2O/(L/s)
 
-PEEP = [0, 5, 15]      #positive end-expiratory pressure, water-centimeters (cmH2O)
-SP = [5, 10, 15]        #support pressure (above PEEP) (cmH2O)
+PEEP = [0]#, 5, 15]      #positive end-expiratory pressure, water-centimeters (cmH2O)
+# PEEP = np.arange(0.0, 15.01, 0.001)
+SP = np.arange(0.0, 15.01, 0.001)        #support pressure (above PEEP) (cmH2O)
+# SP = [5, 10, 15]        #support pressure (above PEEP) (cmH2O)
 Triggertype = ['flow']      #ventilator trigger type
 Triggerflow = [2]                          #airflow, (L/min)
 Triggerpressure = [-0.5, -1, -2]                 #pressure (cmH2O)
-Triggerdelay = [0.05, 0.10]                     #delay time (s)
+Triggerdelay = np.arange(0.05, 0.101,0.01)      #delay time (s)
 Triggerarg = Triggerflow
 Cycleoff = np.arange(0.10, 0.4 ,0.01)                     #turns off the support, after flow fall below x% of the peak flow
 Risetype = ['exp','linear']                    #pressure waveform rises in exponential or linear fashions
