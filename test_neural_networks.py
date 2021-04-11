@@ -7,7 +7,10 @@ import time
 from solve_model import solve_model
 import matplotlib.pyplot as plt
 
-size = 60000.0
+size = 100000
+
+samples_size = 30
+
 flow = np.load('./data/flow'+str(size)+'.npy')
 volume = np.load('./data/volume'+str(size)+'.npy')
 paw = np.load('./data/paw'+str(size)+'.npy')
@@ -28,11 +31,11 @@ capacitances = np.load('./data/capacitances'+str(size)+'.npy')
 
 
 imagepath = './images/full_'
-model_filename = 'pmus_cnn_ASL_sincrono'
+model_filename = 'pmus_cnn_'+str(size)
 model = load_model_from_json(model_filename)
 # print(model.summary())
-path_samples = 'test_21.csv'
-# sampling_generator(100,path_samples)
+path_samples = 'test_'+str(samples_size)+'.csv'
+sampling_generator(samples_size,path_samples)
 
 header_params , param = load_csv(path_samples)
 
@@ -40,11 +43,6 @@ num_test_cases = len(param)
 header_features, feature = get_random_features(features,num_test_cases)
 
 print(f'Number of respiratory cycles to be simulated: {num_test_cases}')
-
-fs = Fs[0]
-rr = RR[0]
-
-print(f'Creating waveforms for fs={fs} / rr={rr}')
 
 num_points = int(np.floor(180.0 / np.min(RR) * np.max(Fs)) + 1)
 
@@ -116,9 +114,6 @@ plt.xlabel('Iterações')
 plt.savefig(imagepath +'capacitance.png', format='png')
 plt.savefig(imagepath +'capacitance.svg', format='svg')
 
-err_r     = []
-err_c     = []
-err_pmus  = []
 
 for i in range(20):
     R_hat = denormalize_data(output_pred_test[i, 0], min_resistances, max_resistances)
@@ -140,35 +135,3 @@ for i in range(20):
     plt.ylabel('Pmus')
     plt.title('Test case %d' % (i + 1))
     plt.savefig(imagepath +'pmus_case_test_%d.png' % (i + 1), format='png')
-
-    err_c.append((C-C_hat)**2)
-    err_r.append((R-R_hat)**2)
-    err_pmus.append((pmus-pmus_hat)**2)
-
-
-from statistics import stdev, mean
-
-mean_c = mean(err_c)
-std_c  = stdev(err_c)
-
-print("mean error capacitance: ", mean_c)
-print("std  error capacitance: ", std_c)
-
-mean_r = mean(err_r)
-std_r  = stdev(err_r)
-
-print("mean error resistance: ", mean_r)
-print("std  error resistance: ", std_r)
-
-mean_pmus = mean((mean(err) for err in err_pmus))
-std_pmus  = mean((stdev(err) for err in err_pmus))
-
-print("mean error pmus: ", mean_pmus)
-print("std  error pmus: ", std_pmus)
-
-
-# plt.figure()
-# plt.plot(rc)
-# plt.plot(rc_hat)    
-# plt.show()
-

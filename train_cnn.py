@@ -5,8 +5,8 @@ from matplotlib import pyplot as plt
 
 num_epochs = 100
 
-size = 9e3
-json_file_name = 'pmus_cnn'
+size = 100000
+json_file_name = 'pmus_cnn_'+str(size)
 flow = np.load('./data/flow'+str(size)+'.npy')
 print("flow carregado")
 volume = np.load('./data/volume'+str(size)+'.npy')
@@ -48,7 +48,7 @@ print("input created")
 
 
 input_train, input_test, output_train, output_test, indices_train, indices_test = \
-    train_test_split(input_data, output_data, indices, test_size=0.2, shuffle=True, random_state=0)
+    train_test_split(input_data, output_data, indices, test_size=0.25, shuffle=False)
 
 print("before CNN")
 model = CNN_Model(num_samples,input_volume = 3).get_model()
