@@ -7,7 +7,7 @@ import time
 from solve_model import solve_model
 import matplotlib.pyplot as plt
 
-size = 100000
+size = 60000.0
 flow = np.load('./data/flow'+str(size)+'.npy')
 volume = np.load('./data/volume'+str(size)+'.npy')
 paw = np.load('./data/paw'+str(size)+'.npy')
@@ -20,12 +20,19 @@ capacitances = np.load('./data/capacitances'+str(size)+'.npy')
 (min_resistances, max_resistances, _) = normalize_data(resistances)
 (min_capacitances, max_capacitances, _) = normalize_data(capacitances)
 
+# min_flow,max_flow = -230.21053955779516, 291.84186226884987
+# min_volume,max_volume = -4.80200698015777, 1625.6115545292896
+# min_paw,max_paw = -1.9274642712031753, 15.75437039299909
+# min_resistances,max_resistances = 0.004, 0.030009000000008695
+# min_capacitances,max_capacitances = 30.01000000000001, 80.00700000006111
+
+
 imagepath = './images/full_'
-model_filename = 'pmus_cnn'
+model_filename = 'pmus_cnn_ASL_sincrono'
 model = load_model_from_json(model_filename)
-print(model.summary())
-path_samples = 'test_small_100.csv'
-sampling_generator(100,path_samples)
+# print(model.summary())
+path_samples = 'test_21.csv'
+# sampling_generator(100,path_samples)
 
 header_params , param = load_csv(path_samples)
 
@@ -87,22 +94,27 @@ output_data = np.concatenate((resistances_norm, capacitance_norm), axis=1)
 output_pred_test = model.predict(input_data)
 
 plt.figure()
+plt.grid()
 plt.plot(denormalize_data(output_data[0:20, 0], min_resistances, max_resistances))
 plt.plot(denormalize_data(output_pred_test[0:20, 0], min_resistances, max_resistances))
 plt.legend(['Real','Rede Neural'])
-plt.ylabel('R')
-plt.title('Resistance')
+plt.ylabel('Resistência')
+plt.xlabel('Iterações')
 plt.savefig(imagepath + 'resistance.png', format='png')
-
+plt.savefig(imagepath + 'resistance.svg', format='svg')
+plt.close()
 
 
 plt.figure()
+plt.grid()
 plt.plot(denormalize_data(output_data[0:20, 1], min_capacitances, max_capacitances))
 plt.plot(denormalize_data(output_pred_test[0:20, 1], min_capacitances, max_capacitances))
 plt.legend(['Real','Rede Neural'])
-plt.ylabel('C')
-plt.title('Capacitance')
+plt.ylabel('Complacência')
+plt.xlabel('Iterações')
+# plt.title('Capacitance')
 plt.savefig(imagepath +'capacitance.png', format='png')
+plt.savefig(imagepath +'capacitance.svg', format='svg')
 
 err_r     = []
 err_c     = []

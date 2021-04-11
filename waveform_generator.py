@@ -6,8 +6,8 @@ import os
 from sampling_generator import sampling_generator
 import matplotlib.pyplot as plt
 
-save_file = True
-size = 9e3
+save_file = False
+size = 21
 filename = 'test_'+str(size)+'.csv'
 
 if not os.path.exists(filename):
@@ -51,6 +51,85 @@ for i in range(num_test_cases):
     capacitances[0, i] = c
 
 print(f'Elapsed time for solving test cases: {time.time() - t}')
+
+
+time = np.arange(0, len(flow), 1) / Fs
+path = './images/ppt/'
+
+for index in range(size):
+
+    plt.figure()
+    plt.grid()
+    plt.plot(time,volume[:,index])
+    plt.xlim(0,18)
+    plt.ylim(0,550)
+    plt.xlabel('Tempo ($s$)',fontsize=14)
+    plt.ylabel('Volume ($mL$)',fontsize=14)
+    plt.tight_layout()
+    plt.savefig(path+str(index)+'_volume.eps',format='eps')
+    plt.savefig(path+str(index)+'_volume.svg',format='svg')
+    plt.savefig(path+str(index)+'_volume.png',format='png')
+    plt.close()
+
+    plt.figure()
+    plt.grid()
+    plt.plot(time,flow[:,index]*1000/60)
+    plt.xlim(0,18)
+    plt.ylim(-1000,1550)
+    plt.xlabel('Tempo ($s$)',fontsize=14)
+    plt.ylabel('Fluxo ($mL/s$)',fontsize=14)
+    plt.tight_layout()
+    plt.savefig(path+str(index)+'_fluxo.eps',format='eps')
+    plt.savefig(path+str(index)+'_fluxo.svg',format='svg')
+    plt.savefig(path+str(index)+'_fluxo.png',format='png')
+    plt.close()
+
+
+    plt.figure()
+    plt.grid()
+    plt.plot(time,paw[:,index])
+    plt.xlim(0,18)
+    plt.ylim(0,25)
+    plt.xlabel('Tempo ($s$)',fontsize=14)
+    plt.ylabel('Pressão Respirador ($cmH2O$)',fontsize=14)
+    plt.tight_layout()
+    plt.savefig(path+str(index)+'_pressao.eps',format='eps')
+    plt.savefig(path+str(index)+'_pressao.svg',format='svg')
+    plt.savefig(path+str(index)+'_pressao.png',format='png')
+    plt.close()
+
+
+    plt.figure()
+    plt.grid()
+    plt.plot(time,pmus[:,index])
+    plt.xlim(0,18)
+    plt.ylim(-18,2)
+    plt.xlabel('Tempo ($s$)',fontsize=14)
+    plt.ylabel('Pressão Muscular ($cmH2O$)',fontsize=14)
+    plt.tight_layout()
+    plt.savefig(path+str(index)+'_pmus.eps',format='eps')
+    plt.savefig(path+str(index)+'_pmus.svg',format='svg')
+    plt.savefig(path+str(index)+'_pmus.png',format='png')
+    plt.close()
+
+    plt.figure()
+    plt.grid()
+    plt.plot(time,volume[:,index]/10)
+    plt.plot(time,flow[:,index])
+    plt.plot(time,paw[:,index])
+    plt.plot(time,pmus[:,index])
+    plt.xlim(0,18)
+    # plt.ylim(-18,2)
+    plt.xlabel('Tempo ($s$)',fontsize=14)
+    plt.legend(['Volume (cL)','Fluxo (L/min)','Pressão (cmH2O)','Pressão Muscular (cmH2O)'])
+    # plt.ylabel('Pressão Muscular ($cmH2O$)')
+    plt.tight_layout()
+    plt.savefig(path+str(index)+'_compilado.eps',format='eps')
+    plt.savefig(path+str(index)+'_compilado.svg',format='svg')
+    plt.savefig(path+str(index)+'_compilado.png',format='png')
+    plt.close()
+
+    
 
 
 # Save the waveforms in a file

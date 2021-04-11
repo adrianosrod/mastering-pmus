@@ -27,6 +27,16 @@ offset = 10
 # (min_resistances, max_resistances, _) = normalize_data(resistances)
 # (min_capacitances, max_capacitances, _) = normalize_data(capacitances)
 
+def get_peep(ins_mark,paw,default_peep=0.0): 
+    indexes = ~np.isnan(ins_mark)
+    for i in range(len(indexes)):
+        if indexes[i+1:i+5].any():
+            indexes[i] = True
+
+    return np.average(paw[indexes]) if len(ins_mark[indexes])>0 else default_peep
+
+default_peep = get_peep(np.array(annots['ins_mark']),np.array(annots['paw']))
+
 min_flow,max_flow = -230.21053955779516, 291.84186226884987
 min_volume,max_volume = -4.80200698015777, 1625.6115545292896
 min_paw,max_paw = -1.9274642712031753, 15.75437039299909
@@ -60,10 +70,11 @@ else:
     aux = [elem[0]*60/1000 for index,elem in enumerate(annots['flowLmin']) if index%offset == 0 ]
 flow = []
 for index in range(len(aux)//901):
-    flow.append(aux[index*901:(index+1)*901] - np.percentile(np.abs(aux[index*901:(index+1)*901]),15))
+    flow.append(aux[index*901:(index+1)*901] )#- np.percentile(np.abs(aux[index*901:(index+1)*901]),15))
 # print(len(annots['volint'])) 489998
-flow = np.array(flow)
+flow = np.array(flow)    
 
+# get_peep(annots)
 
 # print(min(flow[0,:]),max(flow[0,:]))
 
@@ -77,12 +88,19 @@ flow = np.array(flow)
 
 # print(annots['paw']) # Good
 aux = [elem[0] for index,elem in enumerate(annots['paw']) if index%offset == 0 ]
+_paw = np.array([elem[0] for index,elem in enumerate(annots['paw'])])
 paw = []
 
 for index in range(len(aux)//901):
-    paw.append(aux[index*901:(index+1)*901] - np.percentile(np.abs(aux[index*901:(index+1)*901]),15) )
+    paw.append(aux[index*901:(index+1)*901] )#- np.percentile(np.abs(aux[index*901:(index+1)*901]),15) )
 paw = np.array(paw)
 
+
+ins_mark = np.array([elem[0] for index,elem in enumerate(annots['ins_mark'])])
+
+# for index in range(len(aux)//901):
+#     ins_mark.append(aux[index*901:(index+1)*901] )#- np.percentile(np.abs(aux[index*901:(index+1)*901]),15) )
+# ins_mark = np.array(ins_mark)
 
 # print(annots['pmusASL']) # Good
 if filename is 'asl_assinc.mat':
@@ -91,7 +109,7 @@ else:
     aux = [elem[0] for index,elem in enumerate(annots['pmusASL']) if index%offset == 0 ]
 pmus = []
 for index in range(len(aux)//901):
-    pmus.append(aux[index*901:(index+1)*901]- np.percentile(np.abs(aux[index*901:(index+1)*901]),15))
+    pmus.append(aux[index*901:(index+1)*901] )#- np.percentile(np.abs(aux[index*901:(index+1)*901]),15))
 # print(len(annots['volint'])) 489998
 pmus = np.array(pmus)
 
@@ -110,7 +128,7 @@ else:
     aux = [elem[0] for index,elem in enumerate(annots['volint']) if index%offset == 0 ]
 volume = []
 for index in range(len(aux)//901):
-    volume.append(aux[index*901:(index+1)*901]- np.percentile(np.abs(aux[index*901:(index+1)*901]),15))
+    volume.append(aux[index*901:(index+1)*901] )#- np.percentile(np.abs(aux[index*901:(index+1)*901]),15))
 # print(len(annots['volint'])) 489998
 volume = np.array(volume)
 
@@ -140,17 +158,29 @@ err_r     = []
 err_c     = []
 err_pmus  = []
 
-R_hat = np.average([denormalize_data(output_pred_test[i, 0], minimum=min_resistances, maximum=max_resistances) for i in range(num_examples)])
-C_hat = np.average([denormalize_data(output_pred_test[i, 1], minimum= min_capacitances, maximum= max_capacitances) for i in range(num_examples)])
-for i in range(num_examples):
-    # R_hat = denormalize_data(output_pred_test[i, 0], minimum=min_resistances, maximum=max_resistances)
-    # C_hat = denormalize_data(output_pred_test[i, 1], minimum= min_capacitances, maximum= max_capacitances)
+# R_hat = np.average([denormalize_data(output_pred_test[i, 0], minimum=min_resistances, maximum=max_resistances) for i in range(num_examples)])
+# C_hat = np.average([denormalize_data(output_pred_test[i, 1], minimum= min_capacitances, maximum= max_capacitances) for i in range(num_examples)])
+
+R_hat = denormalize_data(output_pred_test[0, 0], minimum=min_resistances, maximum=max_resistances)
+C_hat = denormalize_data(output_pred_test[0, 1], minimum= min_capacitances, maximum= max_capacitances)
+alpha = 0.4
+
+rr = min(RR)
+fs = max(Fs)
+time = np.arange(0, np.floor(180.0 / rr * fs) + 1, 1) / fs
+
+for i in range(num_examples-1):
+    R_hat = alpha*denormalize_data(output_pred_test[i, 0], minimum=min_resistances, maximum=max_resistances) + (1-alpha)*R_hat
+    C_hat = alpha*denormalize_data(output_pred_test[i, 1], minimum= min_capacitances, maximum= max_capacitances) + (1-alpha)*C_hat
+    
     # R = denormalize_data(output_data[i, 0], min_resistances, max_resistances)
     # C = denormalize_data(output_data[i, 1], min_capacitances, max_capacitances)
     
     flow = denormalize_data(input_data[i, :, 0], min_flow, max_flow)
     volume = denormalize_data(input_data[i, :, 1], min_volume, max_volume)
     paw = denormalize_data(input_data[i, :, 2], min_paw, max_paw)
+    peep = get_peep(ins_mark[offset*i*num_examples:offset*(i+1)*num_examples],_paw[offset*i*num_examples:offset*(i+1)*num_examples], default_peep=default_peep)
+    
     print("R:",R_hat)
     print("C:",C_hat)
     # plt.plot(flow)
@@ -158,23 +188,46 @@ for i in range(num_examples):
     # plt.plot(paw)
     # plt.show()
     # raise EOFError()
-
     
-    pmus_hat = paw - np.percentile(np.abs(paw),60) - (R_hat) * flow *1000.0 / 60.0 - (1 /C_hat) * volume
+    pmus_hat = paw - peep - (R_hat) * flow *1000.0 / 60.0 - (1 /C_hat) * volume
     
     plt.figure()
     
-    plt.plot(pmus[i,:])
-    plt.plot(pmus_hat)
+    plt.plot(time,pmus[i,:])
+    plt.plot(time,pmus_hat)
+    plt.grid()
     plt.legend(['Real','Rede Neural'])
-    plt.ylabel('Pmus')
-    plt.title('Test case %d' % (i + 1))
-    plt.savefig(imagepath +'pmus_case_test_%d.png' % (i + 1), format='png')
-
-    # err_c.append((C_hat))
-    # err_r.append((R_hat))
+    plt.ylabel('Pressão muscular (cmH2O)')
+    plt.xlabel('Tempo (s)')
+    # plt.title('Test case %d' % (i + 1))
+    plt.savefig(imagepath +'ppt_pmus_case_test_%d.png' % (i + 1), format='png')
+    plt.savefig(imagepath +'ppt_pmus_case_test_%d.svg' % (i + 1), format='svg')
+    plt.close()
+    err_c.append((C_hat))
+    err_r.append((R_hat))
     err_pmus.append(sum((pmus[i,:]-pmus_hat)**2)/len(pmus_hat))
 
 print(sum(err_pmus)/len(err_pmus))
+
+plt.figure()
+plt.plot(err_c)
+plt.grid()
+plt.ylabel('Complacência')
+plt.xlabel('Iteração')
+# plt.title('Test case %d' % (i + 1))
+plt.savefig(imagepath +'ppt_pmus_complacencia.png', format='png')
+plt.savefig(imagepath +'ppt_pmus_complacencia.svg', format='svg')
+plt.close()
+
+plt.figure()
+plt.plot(err_r)
+plt.grid()
+plt.ylabel('Resistência')
+plt.xlabel('Iteração')
+# plt.title('Test case %d' % (i + 1))
+plt.savefig(imagepath +'ppt_pmus_resistencia.png', format='png')
+plt.savefig(imagepath +'ppt_pmus_resistencia.svg', format='svg')
+plt.close()
+
 
 # plt.show()

@@ -203,11 +203,11 @@ def generate_cycle(length,*args,peep=None):
     delta     = (length - startpos)
     nzeroes   = delta//len(args[0])+1
     
-    zpos      = np.random.randint(2,delta//3,size=nzeroes)
+    zpos      = np.random.randint(2,delta//10,size=nzeroes)
     
     res       = [None]*len(args)
 
-    vrandom   = [np.random.uniform(0.95,1.05) if np.random.random() > 0.01 else np.random.uniform(0.1,0.2) for i in range(nzeroes+1)]
+    vrandom   = [np.random.uniform(0.95,1.05) if np.random.random() > 0.2 else np.random.uniform(0.1,0.2) for i in range(nzeroes+1)]
 
     for i in range(len(args)):
         rarr = args[i][-startpos:]
