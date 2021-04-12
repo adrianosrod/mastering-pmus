@@ -13,45 +13,40 @@ annots = loadmat(filename)
 
 offset = 10
 
-# size = 100e3
-# flow = np.load('./data/flow'+str(size)+'.npy').T
-# volume = np.load('./data/volume'+str(size)+'.npy').T
-# paw = np.load('./data/paw'+str(size)+'.npy').T
-# resistances = np.load('./data/rins'+str(size)+'.npy').T
-# capacitances = np.load('./data/capacitances'+str(size)+'.npy').T
+size = 40000
 
+imagepath = './images/_'
+model_filename = 'pmus_cnn_'+str(size)
 
-# (min_flow, max_flow, _) = normalize_data(flow)
-# (min_volume, max_volume, _) = normalize_data(volume)
-# (min_paw, max_paw, _) = normalize_data(paw)
-# (min_resistances, max_resistances, _) = normalize_data(resistances)
-# (min_capacitances, max_capacitances, _) = normalize_data(capacitances)
+def remove_peep(ins_mark,exp_mark,paw): 
+    # bool_indexes = ~np.isnan(ins_mark)
+    ins_indexes = [i for i in range(len(~np.isnan(ins_mark))) if ~np.isnan(ins_mark)[i]][:-1]
+    exp_indexes = [i for i in range(len(~np.isnan(ins_mark))) if ~np.isnan(exp_mark)[i]][1:]
+    i = 0
+    for  ins, exp in zip(ins_indexes,exp_indexes):
+        peep = np.average(paw[ins-5:ins])
+        if i == 0: 
+            paw[:exp] -= peep
+        
+        else:
+            paw[last_exp:exp] -= peep
+        
+        last_ins, last_exp = ins,exp
+        i+=1
 
-def get_peep(ins_mark,paw,default_peep=0.0): 
-    indexes = ~np.isnan(ins_mark)
-    for i in range(len(indexes)):
-        if indexes[i+1:i+5].any():
-            indexes[i] = True
+    return paw
 
-    return np.average(paw[indexes]) if len(ins_mark[indexes])>0 else default_peep
-
-default_peep = get_peep(np.array(annots['ins_mark']),np.array(annots['paw']))
-
-min_flow,max_flow = -230.21053955779516, 291.84186226884987
-min_volume,max_volume = -4.80200698015777, 1625.6115545292896
-min_paw,max_paw = -1.9274642712031753, 15.75437039299909
-min_resistances,max_resistances = 0.004, 0.030009000000008695
-min_capacitances,max_capacitances = 30.01000000000001, 80.00700000006111
+# min_flow,max_flow = -230.21053955779516, 291.84186226884987
+# min_volume,max_volume = -4.80200698015777, 1625.6115545292896
+# min_paw,max_paw = -1.9274642712031753, 15.75437039299909
+# min_resistances,max_resistances = 0.004, 0.030009000000008695
+# min_capacitances,max_capacitances = 30.01000000000001, 80.00700000006111
 
 # print(min_flow,max_flow)
 # print(min_volume,max_volume)
 # print(min_paw,max_paw)
 # print(min_resistances,max_resistances)
 # print(min_capacitances,max_capacitances)
-
-imagepath = './images/full_'
-model_filename = 'pmus_cnn_ASL_sincrono'
-models = [load_model_from_json(model_filename)]
     
     
 # model = load_model_from_json(model_filename)
@@ -87,16 +82,34 @@ flow = np.array(flow)
 #print(annots['ins_mark']) #nan
 
 # print(annots['paw']) # Good
-aux = [elem[0] for index,elem in enumerate(annots['paw']) if index%offset == 0 ]
-_paw = np.array([elem[0] for index,elem in enumerate(annots['paw'])])
-paw = []
-
-for index in range(len(aux)//901):
-    paw.append(aux[index*901:(index+1)*901] )#- np.percentile(np.abs(aux[index*901:(index+1)*901]),15) )
-paw = np.array(paw)
-
 
 ins_mark = np.array([elem[0] for index,elem in enumerate(annots['ins_mark'])])
+exp_mark = np.array([elem[0] for index,elem in enumerate(annots['exp_mark'])])
+
+
+_paw = np.array([elem[0] for index,elem in enumerate(annots['paw'])])
+_paw = remove_peep(ins_mark,exp_mark,_paw)
+
+aux = np.array([elem for index,elem in enumerate(_paw) if index%offset == 0 ])
+
+paw = []
+for index in range(len(aux)//901):
+    paw.append(aux[index*901:(index+1)*901])
+
+paw = np.array(paw)
+
+# plt.plot(paw[0])
+# plt.show()
+
+
+# plt.plot(paw[10])
+# plt.show()
+
+# plt.plot(paw[20])
+# plt.show()
+
+# plt.plot(paw[30])
+# plt.show()
 
 # for index in range(len(aux)//901):
 #     ins_mark.append(aux[index*901:(index+1)*901] )#- np.percentile(np.abs(aux[index*901:(index+1)*901]),15) )
@@ -142,6 +155,19 @@ num_examples = flow.shape[0]
 num_samples = flow.shape[1]
 
 
+
+_flow = np.load('./data/flow'+str(size)+'.npy')
+_volume = np.load('./data/volume'+str(size)+'.npy')
+_paw = np.load('./data/paw'+str(size)+'.npy')
+_resistances = np.load('./data/rins'+str(size)+'.npy')
+_capacitances = np.load('./data/capacitances'+str(size)+'.npy')
+
+(min_flow, max_flow, _) = normalize_data(_flow)
+(min_volume, max_volume, _) = normalize_data(_volume)
+(min_paw, max_paw, _) = normalize_data(_paw)
+(min_resistances, max_resistances, _) = normalize_data(_resistances)
+(min_capacitances, max_capacitances, _) = normalize_data(_capacitances)
+
 (_, _, flow_norm) = normalize_data(flow, minimum=min_flow, maximum=max_flow)
 (_, _, volume_norm) = normalize_data(volume, minimum=min_volume, maximum=max_volume)
 (_, _, paw_norm) = normalize_data(paw, minimum=min_paw, maximum=max_paw)
@@ -150,6 +176,9 @@ input_data = np.zeros((num_examples, num_samples, 3))
 input_data[:, :, 0] = flow_norm
 input_data[:, :, 1] = volume_norm
 input_data[:, :, 2] = paw_norm
+
+
+models = [load_model_from_json(model_filename)]
 
 output_pred_test = [model.predict(input_data) for model in models]
 output_pred_test = sum(output_pred_test)/len(output_pred_test)
@@ -163,15 +192,18 @@ err_pmus  = []
 
 R_hat = denormalize_data(output_pred_test[0, 0], minimum=min_resistances, maximum=max_resistances)
 C_hat = denormalize_data(output_pred_test[0, 1], minimum= min_capacitances, maximum= max_capacitances)
-alpha = 0.4
+alpha = 0.2
 
 rr = min(RR)
 fs = max(Fs)
 time = np.arange(0, np.floor(180.0 / rr * fs) + 1, 1) / fs
 
 for i in range(num_examples-1):
-    R_hat = alpha*denormalize_data(output_pred_test[i, 0], minimum=min_resistances, maximum=max_resistances) + (1-alpha)*R_hat
-    C_hat = alpha*denormalize_data(output_pred_test[i, 1], minimum= min_capacitances, maximum= max_capacitances) + (1-alpha)*C_hat
+    # R_hat = alpha*denormalize_data(output_pred_test[i, 0], minimum=min_resistances, maximum=max_resistances) + (1-alpha)*R_hat
+    # C_hat = alpha*denormalize_data(output_pred_test[i, 1], minimum= min_capacitances, maximum= max_capacitances) + (1-alpha)*C_hat
+    
+    R_hat = denormalize_data(output_pred_test[i, 0], minimum=min_resistances, maximum=max_resistances)
+    C_hat = denormalize_data(output_pred_test[i, 1], minimum= min_capacitances, maximum= max_capacitances)
     
     # R = denormalize_data(output_data[i, 0], min_resistances, max_resistances)
     # C = denormalize_data(output_data[i, 1], min_capacitances, max_capacitances)
@@ -179,7 +211,6 @@ for i in range(num_examples-1):
     flow = denormalize_data(input_data[i, :, 0], min_flow, max_flow)
     volume = denormalize_data(input_data[i, :, 1], min_volume, max_volume)
     paw = denormalize_data(input_data[i, :, 2], min_paw, max_paw)
-    peep = get_peep(ins_mark[offset*i*num_examples:offset*(i+1)*num_examples],_paw[offset*i*num_examples:offset*(i+1)*num_examples], default_peep=default_peep)
     
     print("R:",R_hat)
     print("C:",C_hat)
@@ -189,7 +220,7 @@ for i in range(num_examples-1):
     # plt.show()
     # raise EOFError()
     
-    pmus_hat = paw - peep - (R_hat) * flow *1000.0 / 60.0 - (1 /C_hat) * volume
+    pmus_hat = paw - (R_hat) * flow *1000.0 / 60.0 - (1 /C_hat) * volume
     
     plt.figure()
     

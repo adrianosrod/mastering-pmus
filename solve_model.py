@@ -207,7 +207,7 @@ def generate_cycle(length,*args,peep=None):
     
     res       = [None]*len(args)
 
-    vrandom   = [np.random.uniform(0.95,1.05) if np.random.random() > 0.05 else np.random.uniform(0.1,0.2) for i in range(nzeroes+1)]
+    vrandom   = [np.random.uniform(0.95,1.05) if np.random.random() > 0.01 else np.random.uniform(0.1,0.2) for i in range(nzeroes+1)]
 
     for i in range(len(args)):
         rarr = args[i][-startpos:]

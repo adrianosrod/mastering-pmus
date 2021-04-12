@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 
 num_epochs = 100
 
-size = 100000
+size = 40000
 json_file_name = 'pmus_cnn_'+str(size)
 flow = np.load('./data/flow'+str(size)+'.npy')
 print("flow carregado")
