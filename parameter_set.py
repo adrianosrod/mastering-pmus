@@ -5,7 +5,7 @@ RESISTENCE_EXP  = 'Rexp'
 CAPACITANCE     = 'C'
 
 Fs = [50.0]           #sample frequency, Hertz (Hz)
-Noise = [1e-4, 1e-3, 1e-6] #noise variance over pressure/flow waveforms
+Noise = [0.0, 1e-4, 1e-3, 1e-6] #noise variance over pressure/flow waveforms
 
 Rvent = [0]          #ventilator expiratory valve resistance, cmH2O/(L/s)
 Model = ['FOLM'] #respiratory system model
@@ -30,8 +30,8 @@ Risetime = np.arange(0.15, 0.3,0.01)                    #time (s) to pressure wa
 RR = np.arange(10.0,35.01,0.1)#[10, 15, 25, 35]   #respiratory rate, respirations per minute (rpm)
 Pmustype = ['ingmar', 'linear', 'parexp']        #morphology of the respiratory effort
 Pp = np.arange(-15.0, -4.9, 0.001)#[-5]#, -10, -12]    #Pmus negative peak amplitude (cmH2O)
-Tp = np.arange(0.3, 0.46, 0.001)#[0.45]#, 0.5]   #Pmus negative peak time (s)
-Tf = np.arange(0.6, 0.81, 0.001)#[0.6]     #Pmus finish time (s)
+Tp = np.arange(0.3, 0.8, 0.001)#[0.45]#, 0.5]   #Pmus negative peak time (s)
+Tf = np.arange(1.0, 1.5, 0.001)#[0.6]     #Pmus finish time (s)
 
 cycles_repetition = [1]                     #repeats n-times the parameter combination
 

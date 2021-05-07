@@ -7,7 +7,7 @@ from sampling_generator import sampling_generator
 import matplotlib.pyplot as plt
 
 save_file = True
-size = 40000
+size = 60000
 filename = 'test_'+str(size)+'.csv'
 
 if not os.path.exists(filename):

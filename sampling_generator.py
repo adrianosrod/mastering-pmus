@@ -24,8 +24,7 @@ def sampling_generator(size, path=''):
 
 def is_valid(arr,map_params):
     resp = False
-
-    if is_in_range(arr[map_params.index(RESISTENCE_INSP)],4.0,10.1) and is_in_range(arr[map_params.index(RESISTENCE_EXP)],4.0,10.0):
+    if is_in_range(arr[map_params.index(RESISTENCE_INSP)],4.0,10.01) and is_in_range(arr[map_params.index(RESISTENCE_EXP)],4.0,10.01):
         resp = is_in_range(arr[map_params.index(CAPACITANCE)],60.01,80.01)
     elif is_in_range(arr[map_params.index(RESISTENCE_INSP)],10.01,20.01) and is_in_range(arr[map_params.index(RESISTENCE_EXP)],10.01,20.01):
         resp = is_in_range(arr[map_params.index(CAPACITANCE)],40.01,60.01)

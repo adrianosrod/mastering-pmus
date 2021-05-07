@@ -5,8 +5,8 @@ from matplotlib import pyplot as plt
 
 num_epochs = 100
 
-size = 40000
-json_file_name = 'pmus_cnn_'+str(size)
+size = 60000
+json_file_name = 'pmus__cnn__'+str(size)
 flow = np.load('./data/flow'+str(size)+'.npy')
 print("flow carregado")
 volume = np.load('./data/volume'+str(size)+'.npy')
@@ -48,7 +48,7 @@ print("input created")
 
 
 input_train, input_test, output_train, output_test, indices_train, indices_test = \
-    train_test_split(input_data, output_data, indices, test_size=0.25, shuffle=False)
+    train_test_split(input_data, output_data, indices, test_size=0.3, shuffle=False)
 
 print("before CNN")
 model = CNN_Model(num_samples,input_volume = 3).get_model()
@@ -63,12 +63,18 @@ history = model.fit(input_train, output_train, epochs=num_epochs, verbose=1,
 save_model_to_json(model,json_file_name)
 
 # summarize history for loss
+plt.rcParams.update({'font.size': 12})
+
+plt.figure()
+plt.grid()
 plt.plot(history.history['loss'])
 plt.plot(history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
+# plt.title('model loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['train', 'validation'], loc='upper left')
+plt.savefig('train_val.eps',format='eps')
 plt.show()
+
 
 

@@ -13,18 +13,21 @@ annots = loadmat(filename)
 
 offset = 10
 
-size = 40000
+size = 60000
+
+plt.rcParams.update({'font.family': 'serif'})
+
+plt.rcParams.update({'font.size': 10})
 
 imagepath = './images/_'
-model_filename = 'pmus_cnn_'+str(size)
+model_filename = 'pmus__cnn_'+str(size)
 
 def remove_peep(ins_mark,exp_mark,paw): 
-    # bool_indexes = ~np.isnan(ins_mark)
     ins_indexes = [i for i in range(len(~np.isnan(ins_mark))) if ~np.isnan(ins_mark)[i]][:-1]
     exp_indexes = [i for i in range(len(~np.isnan(ins_mark))) if ~np.isnan(exp_mark)[i]][1:]
     i = 0
     for  ins, exp in zip(ins_indexes,exp_indexes):
-        peep = np.average(paw[ins-5:ins])
+        peep = np.average(paw[ins-int(512/5):ins])
         if i == 0: 
             paw[:exp] -= peep
         
@@ -36,29 +39,7 @@ def remove_peep(ins_mark,exp_mark,paw):
 
     return paw
 
-# min_flow,max_flow = -230.21053955779516, 291.84186226884987
-# min_volume,max_volume = -4.80200698015777, 1625.6115545292896
-# min_paw,max_paw = -1.9274642712031753, 15.75437039299909
-# min_resistances,max_resistances = 0.004, 0.030009000000008695
-# min_capacitances,max_capacitances = 30.01000000000001, 80.00700000006111
 
-# print(min_flow,max_flow)
-# print(min_volume,max_volume)
-# print(min_paw,max_paw)
-# print(min_resistances,max_resistances)
-# print(min_capacitances,max_capacitances)
-    
-    
-# model = load_model_from_json(model_filename)
-# print(model.summary())
-
-
-# print(annots['re']) #2 dim
-# print(len(annots['re'][1])) #352 tanto 0 quanto 1
-
-
-# print(annots['flowLmin'])
-# print(len(annots['flowLmin']))
 if filename is 'asl_assinc.mat':
     aux = [elem[0]*60/1000 for index,elem in enumerate(annots['flow']) if index%offset == 0 ]    
 else:
@@ -100,7 +81,6 @@ paw = np.array(paw)
 
 # plt.plot(paw[0])
 # plt.show()
-
 
 # plt.plot(paw[10])
 # plt.show()
@@ -198,6 +178,8 @@ rr = min(RR)
 fs = max(Fs)
 time = np.arange(0, np.floor(180.0 / rr * fs) + 1, 1) / fs
 
+err_pmus_hat = []
+err_nmsre = []
 for i in range(num_examples-1):
     # R_hat = alpha*denormalize_data(output_pred_test[i, 0], minimum=min_resistances, maximum=max_resistances) + (1-alpha)*R_hat
     # C_hat = alpha*denormalize_data(output_pred_test[i, 1], minimum= min_capacitances, maximum= max_capacitances) + (1-alpha)*C_hat
@@ -214,51 +196,51 @@ for i in range(num_examples-1):
     
     print("R:",R_hat)
     print("C:",C_hat)
-    # plt.plot(flow)
-    # plt.plot(volume)
-    # plt.plot(paw)
-    # plt.show()
-    # raise EOFError()
     
     pmus_hat = paw - (R_hat) * flow *1000.0 / 60.0 - (1 /C_hat) * volume
     
-    plt.figure()
+    fig, (ax1, ax2) = plt.subplots(2)
+    ax1.grid()
+    ax2.grid()
+    ax1.plot(time,pmus[i,:])
+    ax1.plot(time,pmus_hat)
+    ax1.plot(time,paw)
+    ax2.plot(time,flow/60)
+
+    ax1.legend(['Real Pmus','Predicted Pmus','Airway Pressure'])
+    ax1.set_ylabel('Pressure (cmH2O)')
+    ax2.set_ylabel('Flow (L/s)')
+    ax2.set_xlabel('Time (s)')
+
+    # plt.figure()
     
-    plt.plot(time,pmus[i,:])
-    plt.plot(time,pmus_hat)
-    plt.grid()
-    plt.legend(['Real','Rede Neural'])
-    plt.ylabel('Pressão muscular (cmH2O)')
-    plt.xlabel('Tempo (s)')
-    # plt.title('Test case %d' % (i + 1))
+    # plt.plot(time,pmus[i,:])
+    # plt.plot(time,pmus_hat)
+    # # plt.plot(time,volume/10)
+    # plt.plot(time,flow/60)
+    # plt.plot(time,paw)
+    # plt.grid()
+    # plt.legend(['Pmus Real (cmH2O)','Pmus Predicted (cmH2O)','Flow (L/s)','Airway Pressure (cmH2O)'])
+    # # plt.ylabel('Pressão muscular (cmH2O)')
+    # plt.xlabel('Time (s)')
+    # # plt.title('Test case %d' % (i + 1))
     plt.savefig(imagepath +'ppt_pmus_case_test_%d.png' % (i + 1), format='png')
     plt.savefig(imagepath +'ppt_pmus_case_test_%d.svg' % (i + 1), format='svg')
+    plt.savefig(imagepath +'ppt_pmus_case_test_%d.eps' % (i + 1), format='eps')
     plt.close()
-    err_c.append((C_hat))
-    err_r.append((R_hat))
-    err_pmus.append(sum((pmus[i,:]-pmus_hat)**2)/len(pmus_hat))
+    
+    err_pmus.extend(pmus[i,:])
+    err_pmus_hat.extend(pmus_hat)
 
-print(sum(err_pmus)/len(err_pmus))
+    #print('test case %d'% (i+1))
+    err_nmsre.append(np.sqrt(np.sum((pmus[i,:] - pmus_hat)**2))/np.sqrt(np.sum((pmus[i,:] - np.average(pmus[i,:]))**2)))
+    #print('nmsre :', np.sqrt(np.sum((pmus[i,:] - pmus_hat)**2))/np.sqrt(np.sum((pmus[i,:] - np.average(pmus[i,:]))**2)))
 
-plt.figure()
-plt.plot(err_c)
-plt.grid()
-plt.ylabel('Complacência')
-plt.xlabel('Iteração')
-# plt.title('Test case %d' % (i + 1))
-plt.savefig(imagepath +'ppt_pmus_complacencia.png', format='png')
-plt.savefig(imagepath +'ppt_pmus_complacencia.svg', format='svg')
-plt.close()
+err_pmus = np.array(err_pmus)
+err_pmus_hat = np.array(err_pmus_hat)
 
-plt.figure()
-plt.plot(err_r)
-plt.grid()
-plt.ylabel('Resistência')
-plt.xlabel('Iteração')
-# plt.title('Test case %d' % (i + 1))
-plt.savefig(imagepath +'ppt_pmus_resistencia.png', format='png')
-plt.savefig(imagepath +'ppt_pmus_resistencia.svg', format='svg')
-plt.close()
+nrmse = np.sqrt(np.sum((err_pmus - err_pmus_hat)**2))/np.sqrt(np.sum((err_pmus - np.average(err_pmus))**2))
 
-
-# plt.show()
+print(nrmse)
+print(np.average(err_nmsre))
+print(np.std(err_nmsre))

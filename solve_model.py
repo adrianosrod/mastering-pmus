@@ -229,6 +229,6 @@ def generate_noise(noise,*args):
     res = [None]*len(args)
     
     for i in range(len(args)):
-        res[i] = args[i] + np.average(args[i])/10*np.random.randn(len(args[i]))*np.sqrt(noise)
+        res[i] = args[i] + np.average(args[i])/3*np.random.randn(len(args[i]))*np.sqrt(noise)
     
     return res
