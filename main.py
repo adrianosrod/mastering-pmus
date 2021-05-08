@@ -17,7 +17,7 @@ size = 60000
 
 plt.rcParams.update({'font.family': 'serif'})
 
-plt.rcParams.update({'font.size': 10})
+plt.rcParams.update({'font.size': 14})
 
 imagepath = './images/_'
 model_filename = 'pmus__cnn_'+str(size)

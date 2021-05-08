@@ -3,7 +3,8 @@ from utils import normalize_data, denormalize_data,np, save_model_to_json
 from tensorflow.keras.callbacks import EarlyStopping
 from matplotlib import pyplot as plt
 
-num_epochs = 100
+num_epochs = 30
+plt.rcParams.update({'font.family': 'serif'})
 
 size = 60000
 json_file_name = 'pmus__cnn__'+str(size)
@@ -50,20 +51,26 @@ print("input created")
 input_train, input_test, output_train, output_test, indices_train, indices_test = \
     train_test_split(input_data, output_data, indices, test_size=0.3, shuffle=False)
 
+input_validation, input_test, output_validation, output_test, indices_validation, indices_test = \
+    train_test_split(input_test, output_test, indices_test, test_size=0.5, shuffle=False)
+
+np.save('./data/input_test.npy', input_test)
+np.save('./data/output_test.npy', output_test)
+
 print("before CNN")
 model = CNN_Model(num_samples,input_volume = 3).get_model()
 print("after CNN")
 
-es_callback = EarlyStopping(monitor='val_loss',patience=10,restore_best_weights=True)
+# es_callback = EarlyStopping(monitor='val_loss',patience=10,restore_best_weights=True)
 
 history = model.fit(input_train, output_train, epochs=num_epochs, verbose=1,
-                    validation_data=(input_test, output_test) , callbacks=[es_callback])
+                    validation_data=(input_validation, output_validation))#, callbacks=[es_callback])
 
 
-save_model_to_json(model,json_file_name)
+#save_model_to_json(model,json_file_name)
 
 # summarize history for loss
-plt.rcParams.update({'font.size': 12})
+plt.rcParams.update({'font.size': 14})
 
 plt.figure()
 plt.grid()
@@ -72,7 +79,7 @@ plt.plot(history.history['val_loss'])
 # plt.title('model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
-plt.legend(['train', 'validation'], loc='upper left')
+plt.legend(['Train', 'Validation'], loc='upper left')
 plt.savefig('train_val.eps',format='eps')
 plt.show()
 
