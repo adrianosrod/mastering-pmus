@@ -13,7 +13,7 @@ plt.rcParams.update({'font.size': 14})
 size = 60000
 samples_size = 1000
 imagepath = './images/full_'
-model_filename = 'pmus__cnn__'+str(size)
+model_filename = 'pmus__cnn__150_epochs__'+str(size)
 
 
 def bland_altman_plot(data1, data2, *args, **kwargs):
@@ -48,64 +48,30 @@ capacitances = np.load('./data/capacitances'+str(size)+'.npy')
 
 
 model = load_model_from_json(model_filename)
-# print(model.summary())
-# path_samples = 'test_'+str(samples_size)+'.csv'
-# sampling_generator(samples_size,path_samples)
 
-# header_params , param = load_csv(path_samples)
+input_data = np.load('./data/input_test.npy')
+output_data = np.load('./data/output_test.npy')
 
-# num_test_cases = len(param)
-# header_features, feature = get_random_features(features,num_test_cases)
+# flow = flow[:,indexes].T
+# volume = volume[:,indexes].T
+# paw = paw[:,indexes].T
+# resistances = resistances[:,indexes].T
+# capacitances = capacitances[:,indexes].T
 
-# print(f'Number of respiratory cycles to be simulated: {num_test_cases}')
+# num_examples = flow.shape[0]
+# num_samples = flow.shape[1]
 
-# num_points = int(np.floor(180.0 / np.min(RR) * np.max(Fs)) + 1)
+# (_, _, flow_norm) = normalize_data(flow, minimum=min_flow, maximum=max_flow)
+# (_, _, volume_norm) = normalize_data(volume, minimum=min_volume, maximum=max_volume)
+# (_, _, paw_norm) = normalize_data(paw, minimum=min_paw, maximum=max_paw)
+# (_, _, resistances_norm) = normalize_data(resistances, minimum=min_resistances, maximum=max_resistances)
+# (_, _, capacitance_norm) = normalize_data(capacitances, minimum=min_capacitances, maximum=max_capacitances)
 
-# # Target waveforms
-# flow = np.zeros((num_points, num_test_cases))
-# volume = np.zeros((num_points, num_test_cases))
-# paw = np.zeros((num_points, num_test_cases))
-# pmus = np.zeros((num_points, num_test_cases))
-# ins = np.zeros((num_points, num_test_cases))
-# resistances_ins = np.zeros((1, num_test_cases))
-# resistances_exp = np.zeros((1, num_test_cases))
-# capacitances = np.zeros((1, num_test_cases))
-
-# t = time.time()
-# for i in range(num_test_cases):
-#     if i % 1000 == 0:
-#         print('%d/%d' % (i, num_test_cases))
-#     (flow[:, i], volume[:, i], paw[:, i], pmus[:, i], ins[:, i], rins,rexp, c) = solve_model(header_params,param[i], header_features,feature[i],'')
-#     resistances_ins[0, i] = rins
-#     resistances_exp[0,i] = rexp
-#     capacitances[0, i] = c
-
-# print(f'Elapsed time for solving test cases: {time.time() - t}')
-
-import random
-
-indexes = random.sample(range(size),samples_size)
-
-flow = flow[:,indexes].T
-volume = volume[:,indexes].T
-paw = paw[:,indexes].T
-resistances = resistances[:,indexes].T
-capacitances = capacitances[:,indexes].T
-
-num_examples = flow.shape[0]
-num_samples = flow.shape[1]
-
-(_, _, flow_norm) = normalize_data(flow, minimum=min_flow, maximum=max_flow)
-(_, _, volume_norm) = normalize_data(volume, minimum=min_volume, maximum=max_volume)
-(_, _, paw_norm) = normalize_data(paw, minimum=min_paw, maximum=max_paw)
-(_, _, resistances_norm) = normalize_data(resistances, minimum=min_resistances, maximum=max_resistances)
-(_, _, capacitance_norm) = normalize_data(capacitances, minimum=min_capacitances, maximum=max_capacitances)
-
-input_data = np.zeros((num_examples, num_samples, 3))
-input_data[:, :, 0] = flow_norm
-input_data[:, :, 1] = volume_norm
-input_data[:, :, 2] = paw_norm
-output_data = np.concatenate((resistances_norm, capacitance_norm), axis=1)
+# input_data = np.zeros((num_examples, num_samples, 3))
+# input_data[:, :, 0] = flow_norm
+# input_data[:, :, 1] = volume_norm
+# input_data[:, :, 2] = paw_norm
+# output_data = np.concatenate((resistances_norm, capacitance_norm), axis=1)
 
 output_pred_test = model.predict(input_data)
 

@@ -3,11 +3,11 @@ from utils import normalize_data, denormalize_data,np, save_model_to_json
 from tensorflow.keras.callbacks import EarlyStopping
 from matplotlib import pyplot as plt
 
-num_epochs = 30
+num_epochs = 150
 plt.rcParams.update({'font.family': 'serif'})
 
 size = 60000
-json_file_name = 'pmus__cnn__'+str(size)
+json_file_name = 'pmus__cnn__150_epochs__'+str(size)
 flow = np.load('./data/flow'+str(size)+'.npy')
 print("flow carregado")
 volume = np.load('./data/volume'+str(size)+'.npy')
@@ -67,7 +67,7 @@ history = model.fit(input_train, output_train, epochs=num_epochs, verbose=1,
                     validation_data=(input_validation, output_validation))#, callbacks=[es_callback])
 
 
-#save_model_to_json(model,json_file_name)
+save_model_to_json(model,json_file_name)
 
 # summarize history for loss
 plt.rcParams.update({'font.size': 14})

@@ -17,7 +17,7 @@ size = 60000
 
 plt.rcParams.update({'font.family': 'serif'})
 
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 12})
 
 imagepath = './images/_'
 model_filename = 'pmus__cnn_'+str(size)
@@ -207,7 +207,7 @@ for i in range(num_examples-1):
     ax1.plot(time,paw)
     ax2.plot(time,flow/60)
 
-    ax1.legend(['Real Pmus','Predicted Pmus','Airway Pressure'])
+    ax1.legend(['Real Pmus','Predicted Pmus','Airway Pressure'], loc='upper left')
     ax1.set_ylabel('Pressure (cmH2O)')
     ax2.set_ylabel('Flow (L/s)')
     ax2.set_xlabel('Time (s)')
